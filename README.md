@@ -1,5 +1,3 @@
-# utl-optimum-number-of-ten-cm-rods-to-cut-into-toy-trains-and-hot-wheels-axles-lp-linear-programming
-Optimum number of ten cm rods to cut into toy trains and hot wheels axles lp linear programming
     %let pgm=utl-optimum-number-of-ten-cm-rods-to-cut-into-toy-trains-and-hot-wheels-axles-lp-linear-programming;
 
     %stop_submission;
@@ -20,6 +18,8 @@ Optimum number of ten cm rods to cut into toy trains and hot wheels axles lp lin
 
         Five Parts
 
+             0 sas proc optmodel
+               Rob Pratt <Rob.Pratt@SAS.COM>
              1 simple case
              2 moderate complexity
              3 complex solution
@@ -29,12 +29,12 @@ Optimum number of ten cm rods to cut into toy trains and hot wheels axles lp lin
 
     github
     https://tinyurl.com/2s4ja2vd
-    https://github.com/rogerjdeangelis/utl-optimum-number-of-ten-cm-rods-to-cut-into-toy-trains-and-hot-wheels-axles-lp-linear-programming
+    https://github.com/rogerjdeangelis/utl-optimum-number-of-ten-cm-rods-to-cut-into-toy-trains-and-hot-wheels-axles-lp-linear-programmi
 
     related repo
     github
     https://tinyurl.com/yhx4rxf7
-    https://github.com/rogerjdeangelis/utl-minimize-cost-of-cattle-feed-with-nutritional-requirements-and-multiple-food-sources-lp-program
+    https://github.com/rogerjdeangelis/utl-minimize-cost-of-cattle-feed-with-nutritional-requirements-and-multiple-food-sources-lp-progr
 
     /*               _     _
      _ __  _ __ ___ | |__ | | ___ _ __ ___
@@ -120,6 +120,81 @@ Optimum number of ten cm rods to cut into toy trains and hot wheels axles lp lin
     /*   No waste                          |                                       |                                           */
     /*                                     |                                       |                                           */
     /***************************************************************************************************************************/
+    /*___                                                       _                       _      _
+     / _ \   ___  __ _ ___   _ __  _ __ ___   ___    ___  _ __ | |_ _ __ ___   ___   __| | ___| |
+    | | | | / __|/ _` / __| | `_ \| `__/ _ \ / __|  / _ \| `_ \| __| `_ ` _ \ / _ \ / _` |/ _ \ |
+    | |_| | \__ \ (_| \__ \ | |_) | | | (_) | (__  | (_) | |_) | |_| | | | | | (_) | (_| |  __/ |
+     \___/  |___/\__,_|___/ | .__/|_|  \___/ \___|  \___/| .__/ \__|_| |_| |_|\___/ \__,_|\___|_|
+                            |_|                          |_|
+    */
+
+    /* simple */
+    %let capacity = 10;
+    data indata;
+       input width demand;
+       datalines;
+     2 5
+     5 2
+    10 2
+    ;
+
+    /* moderate */
+    %let capacity = 10;
+    data indata;
+       input width demand;
+       datalines;
+    3 25
+    4 20
+    5 15
+    ;
+
+    /* complex */
+    %let capacity = 5600;
+    data indata;
+       input width demand;
+       datalines;
+    1380 22
+    1520 25
+    1560 12
+    1710 14
+    1820 18
+    1880 18
+    1930 20
+    2000 10
+    2050 12
+    2100 14
+    2140 16
+    2150 18
+    2200 20
+    ;
+
+    proc optmodel;
+       /* declare parameters and sets */
+       num capacity = &capacity;
+       set ITEMS;
+       num width  {ITEMS};
+       num demand {ITEMS};
+       num num_patterns init card(ITEMS);
+       set PATTERNS = 1..num_patterns;
+       num a {i in ITEMS, j in PATTERNS} = (if i = j then floor(capacity/width[i]) else 0);
+
+       /* read input data */
+       read data indata into ITEMS=[_N_] width demand;
+
+       /* define optimization problem */
+       var X {PATTERNS} >= 0 integer;
+       min NumberOfRods = sum {j in PATTERNS} X[j];
+       con DemandCon {i in ITEMS}:
+          sum {j in PATTERNS} a[i,j] * X[j] >= demand[i];
+
+       /* call solver */
+       solve;
+
+       /* clean up solution and save to output data set */
+       for {j in PATTERNS} X[j] = round(X[j].sol);
+       create data solution from [pattern]={j in PATTERNS: X[j] > 0} X {i in ITEMS} <col('i'||i)=a[i,j]>;
+    quit;
+
 
     /*       _                 _
     / |  ___(_)_ __ ___  _ __ | | ___    ___ __ _ ___  ___
@@ -581,3 +656,4 @@ Optimum number of ten cm rods to cut into toy trains and hot wheels axles lp lin
      \___|_| |_|\__,_|
 
     */
+
