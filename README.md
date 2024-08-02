@@ -4,8 +4,6 @@
 
          TWO SOLUTIONS
 
-              0 sas optmodel
-                Rob Pratt <00000c5046759d08-dmarc-request@listserv.uga.edu>
               1 r no sas input
               2 r with sas input output
 
